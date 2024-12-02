@@ -24,6 +24,8 @@ class Config:
     LOG_FORMAT = '%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)d: %(message)s'  # 日志格式
     LOG_MAX_BYTES = 10 * 1024 * 1024  # 每个日志文件最大尺寸（10MB）
     LOG_BACKUP_COUNT = 5  # 保留的日志文件数量
+    # NOTION
+    NOTION_TOKEN = os.getenv("NOTION_TOKEN")
     # ... 其他配置 ...
     REDIRECT_STDOUT = False  # 默认不重定向
 
