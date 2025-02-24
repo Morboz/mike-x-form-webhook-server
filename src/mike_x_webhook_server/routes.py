@@ -1,7 +1,8 @@
 import hashlib
-from flask import Blueprint, request, current_app
-import os
 import json
+import os
+
+from flask import Blueprint, current_app, request
 
 from mike_x_webhook_server.mikex.form import FormSubmission
 from mike_x_webhook_server.notion import NotionClient

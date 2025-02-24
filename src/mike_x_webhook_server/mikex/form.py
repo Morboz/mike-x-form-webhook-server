@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class CommonSysInfo(BaseModel):
@@ -76,58 +77,59 @@ class FormSubmission(BaseModel):
     submit: List[QuestionSubmit]
     cashier: Optional[CashierInfo] = None
 
-
     def get_form_title(self) -> str:
         return self.common.SYS.FORM_NAME
-    
+
     def get_question_submit_mapping(self) -> dict[str, str]:
         """获取问题文本和答案文本的映射关系
-        
+
         Returns:
             dict[str, str]: 键为问题文本，值为答案文本。多个答案用'|'分隔
         """
         # 先创建问题ID到问题文本的映射
         question_text_map = {q["id"]: q["text"] for q in self.question}
-        
+
         # 创建最终的问题文本到答案的映射
         result = {}
         for submit_item in self.submit:
             question_id = submit_item.question_id
             question_text = question_text_map[question_id]
-            
+
             # 处理答案
             if isinstance(submit_item.answer, list):
                 # 如果是多个答案（比如销售类型），用'|'连接
-                answer_text = " | ".join(item.to_plain_text() for item in submit_item.answer)
+                answer_text = " | ".join(
+                    item.to_plain_text() for item in submit_item.answer
+                )
             else:
                 # 单个答案
                 answer_text = submit_item.answer.to_plain_text()
-            
+
             result[question_text] = answer_text
-            
+
         return result
 
     def get_questions(self) -> list[str]:
         """获取表单中所有问题的文本列表
-        
+
         Returns:
             list[str]: 问题文本列表
         """
         return [question["text"] for question in self.question]
-    
+
     def get_notion_page_title(self) -> str:
         """获取 Notion 页面标题
-        
+
         Returns:
             str: 如果存在 CT_NAME 类型的问题答案，返回该答案；否则返回随机生成的 UUID
         """
         import uuid
-        
+
         # 遍历所有问题和提交
         for question, submit in zip(self.question, self.submit):
             if question["type"] == "CT_NAME":
                 return submit.answer.text
-                
+
         # 如果没有找到 CT_NAME 类型的问题答案，返回随机 UUID
         return str(uuid.uuid4())
 
