@@ -73,7 +73,8 @@ def do_handle_IFP_PAID(payload) -> str:
         # update_notion_database_with_form_submit(payload)
         # 使用线程异步处理
         task_thread = threading.Thread(
-            target=update_notion_database_with_form_submit, args=(payload,)
+            target=update_notion_database_with_form_submit,
+            args=(payload, current_app.logger),
         )
         task_thread.start()
         return "ok"
@@ -99,7 +100,7 @@ def check_sign(
         return None
 
 
-def update_notion_database_with_form_submit(payload: str) -> str:
+def update_notion_database_with_form_submit(payload: str, logger=None) -> str:
     form_data = json.loads(payload)
     form_submission = FormSubmission(**form_data)
     database_title = form_submission.get_form_title()
@@ -120,4 +121,6 @@ def update_notion_database_with_form_submit(payload: str) -> str:
         form_submission.get_notion_page_title(),
         form_submission.get_question_submit_mapping(),
     )
+    if logger:
+        logger.info(f"Created page with ID: {page_id}")
     return page_id
