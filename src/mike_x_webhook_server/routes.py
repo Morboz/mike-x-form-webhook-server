@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import traceback
 
 from flask import Blueprint, current_app, request
 
@@ -62,16 +63,17 @@ def do_handle_URL_VERIFY(payload) -> str:
 def do_handle_FORM_SUBMIT_NEW(payload) -> str:
     current_app.logger.info(f"Received payload: {payload}")
     json.loads(payload)
-    return "OK"
+    return "ok"
 
 
 def do_handle_IFP_PAID(payload) -> str:
     current_app.logger.info(f"Received payload: {payload}")
     try:
         update_notion_database_with_form_submit(payload)
-        return "OK"
+        return "ok"
     except Exception as e:
         current_app.logger.error(f"Error processing IFP_PAID event: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
         return "Internal server error", 500
 
 
