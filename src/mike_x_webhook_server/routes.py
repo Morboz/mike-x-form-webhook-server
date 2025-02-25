@@ -49,6 +49,10 @@ def do_handle_event(event, payload) -> tuple[str, int]:
         return do_handle_URL_VERIFY(payload), 200
     elif event == "FORM_SUBMIT_NEW":
         return do_handle_FORM_SUBMIT_NEW(payload), 200
+    elif event == "IFP_PAID":
+        return do_handle_IFP_PAID(payload), 200
+    else:
+        return "Unsupported event", 400
 
 
 def do_handle_URL_VERIFY(payload) -> str:
@@ -59,6 +63,16 @@ def do_handle_FORM_SUBMIT_NEW(payload) -> str:
     current_app.logger.info(f"Received payload: {payload}")
     json.loads(payload)
     return "OK"
+
+
+def do_handle_IFP_PAID(payload) -> str:
+    current_app.logger.info(f"Received payload: {payload}")
+    try:
+        update_notion_database_with_form_submit(payload)
+        return "OK"
+    except Exception as e:
+        current_app.logger.error(f"Error processing IFP_PAID event: {str(e)}")
+        return "Internal server error", 500
 
 
 def check_sign(
