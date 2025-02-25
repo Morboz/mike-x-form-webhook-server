@@ -1,8 +1,8 @@
 import hashlib
 import json
 import os
-import traceback
 import threading
+import traceback
 
 from flask import Blueprint, current_app, request
 
@@ -107,6 +107,7 @@ def update_notion_database_with_form_submit(payload: str, logger=None) -> str:
     token = os.getenv("NOTION_TOKEN")
     page_id = os.getenv("NOTION_PAGE_ID")
     notion_client = NotionClient(token=token)
+    topic = form_submission.get_topic_from_title()
 
     result = notion_client.get_database_by_title_text(page_id, database_title)
     if result is None:
@@ -119,7 +120,15 @@ def update_notion_database_with_form_submit(payload: str, logger=None) -> str:
     page_id = notion_client.create_page_in_database(
         database_id,
         form_submission.get_notion_page_title(),
-        form_submission.get_question_submit_mapping(),
+        form_submission.get_question_submit_mapping(
+            questions_to_rename={
+                "你的称呼": "Name",
+                "你的 Github": "Github",
+                "你的自我介绍": "Intro",
+                "你的邮箱": "Contact",
+            },
+            default_mapping={"Roles": "Members", "Tags": topic},
+        ),
     )
     if logger:
         logger.info(f"Created page with ID: {page_id}")

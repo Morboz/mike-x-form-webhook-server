@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -71,6 +72,12 @@ class QuestionSubmit(BaseModel):
     answer: Answer | List[SalesAnswer]
 
 
+def extract_first_text_in_brackets(text):
+    pattern = r"【(.*?)】"
+    match = re.search(pattern, text)
+    return match.group(1) if match else None
+
+
 class FormSubmission(BaseModel):
     common: CommonInfo
     question: List[dict]
@@ -80,7 +87,17 @@ class FormSubmission(BaseModel):
     def get_form_title(self) -> str:
         return self.common.SYS.FORM_NAME
 
-    def get_question_submit_mapping(self) -> dict[str, str]:
+    def get_topic_from_title(self) -> str:
+        topic = extract_first_text_in_brackets(self.get_form_title())
+        if topic:
+            return topic
+        return "未知"
+
+    def get_question_submit_mapping(
+        self,
+        questions_to_rename: Optional[dict] = None,
+        default_mapping: Optional[dict] = None,
+    ) -> dict[str, str]:
         """获取问题文本和答案文本的映射关系
 
         Returns:
@@ -95,6 +112,10 @@ class FormSubmission(BaseModel):
             question_id = submit_item.question_id
             question_text = question_text_map[question_id]
 
+            if questions_to_rename and question_text in questions_to_rename:
+                # 如果有问题重命名映射，使用重命名后的问题文本
+                question_text = questions_to_rename[question_text]
+
             # 处理答案
             if isinstance(submit_item.answer, list):
                 # 如果是多个答案（比如销售类型），用'|'连接
@@ -106,6 +127,10 @@ class FormSubmission(BaseModel):
                 answer_text = submit_item.answer.to_plain_text()
 
             result[question_text] = answer_text
+
+        # 如果有默认映射，合并
+        if default_mapping:
+            result.update(default_mapping)
 
         return result
 
