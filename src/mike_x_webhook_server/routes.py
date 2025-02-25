@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import traceback
+import threading
 
 from flask import Blueprint, current_app, request
 
@@ -69,7 +70,12 @@ def do_handle_FORM_SUBMIT_NEW(payload) -> str:
 def do_handle_IFP_PAID(payload) -> str:
     current_app.logger.info(f"Received payload: {payload}")
     try:
-        update_notion_database_with_form_submit(payload)
+        # update_notion_database_with_form_submit(payload)
+        # 使用线程异步处理
+        task_thread = threading.Thread(
+            target=update_notion_database_with_form_submit, args=(payload,)
+        )
+        task_thread.start()
         return "ok"
     except Exception as e:
         current_app.logger.error(f"Error processing IFP_PAID event: {str(e)}")
