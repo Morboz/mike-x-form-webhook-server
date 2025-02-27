@@ -1,9 +1,35 @@
 import logging
+import time
+from functools import wraps
 from typing import Dict, List, Optional
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+def retry_request(max_retries=5):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except requests.RequestException as e:
+                    wait_time = 2**retries  # 1, 2, 4, 8, 16 秒
+                    retries += 1
+                    if retries == max_retries:
+                        raise
+                    logger.warning(
+                        f"请求失败，将在 {wait_time} 秒后进行第 {retries} 次重试: {str(e)}"
+                    )
+                    time.sleep(wait_time)
+            return None
+
+        return wrapper
+
+    return decorator
 
 
 class NotionClient:
@@ -18,6 +44,7 @@ class NotionClient:
             "Content-Type": "application/json",
         }
 
+    @retry_request()
     def create_page_in_database(
         self, database_id: str, page_title: str, properties: dict
     ) -> str:
@@ -73,6 +100,7 @@ class NotionClient:
             )
             raise NotionAPIError(f"Failed to create page: {str(e)}")
 
+    @retry_request()
     def create_database_in_page(
         self,
         page_id: str,
@@ -199,6 +227,7 @@ class NotionClient:
             logger.error(f"Failed to get databases in page {page_id}: {str(e)}")
             raise NotionAPIError(f"Failed to get databases: {str(e)}")
 
+    @retry_request()
     def _get_page_blocks(self, page_id: str) -> List[Dict]:
         """获取页面的所有块"""
         url = f"{self.base_url}/blocks/{page_id}/children"
@@ -227,6 +256,7 @@ class NotionClient:
 
         return results
 
+    @retry_request()
     def _get_database(self, database_id: str) -> Optional[Dict]:
         """获取数据库详细信息"""
         url = f"{self.base_url}/databases/{database_id}"
