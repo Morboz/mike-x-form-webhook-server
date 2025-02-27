@@ -134,13 +134,23 @@ class FormSubmission(BaseModel):
 
         return result
 
-    def get_questions(self) -> list[str]:
+    def get_questions(
+        self,
+        questions_to_rename: Optional[dict] = None,
+        default_mapping: Optional[dict] = None,
+    ) -> list[str]:
         """获取表单中所有问题的文本列表
 
         Returns:
             list[str]: 问题文本列表
         """
-        return [question["text"] for question in self.question]
+        questions = [question["text"] for question in self.question]
+        if questions_to_rename:
+            questions = [questions_to_rename.get(q, q) for q in questions]
+        if default_mapping:
+            # add default mapping keys to questions
+            questions.extend(default_mapping.keys())
+        return questions
 
     def get_notion_page_title(self) -> str:
         """获取 Notion 页面标题

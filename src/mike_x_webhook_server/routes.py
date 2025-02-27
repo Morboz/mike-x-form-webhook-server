@@ -112,14 +112,17 @@ def update_notion_database_with_form_submit(payload: str, logger=None) -> str:
     result = notion_client.get_database_by_title_text(page_id, database_title)
     if result is None:
         database_id = notion_client.create_database_in_page(
-            page_id, database_title, form_submission.get_questions(), 
-            questions_to_rename={
-                "你的称呼": "Name",
-                "你的 Github": "Github",
-                "你的自我介绍": "Intro",
-                "你的邮箱": "Contact",
-            },
-            default_mapping={"Roles": "Members", "Tags": topic},
+            page_id,
+            database_title,
+            form_submission.get_questions(
+                questions_to_rename={
+                    "你的称呼": "Name",
+                    "你的 Github": "Github",
+                    "你的自我介绍": "Intro",
+                    "你的邮箱": "Contact",
+                },
+                default_mapping={"Roles": "Members", "Tags": topic},
+            ),
         )
     else:
         database_id = result["id"]

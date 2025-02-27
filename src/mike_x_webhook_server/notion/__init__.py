@@ -74,9 +74,10 @@ class NotionClient:
             raise NotionAPIError(f"Failed to create page: {str(e)}")
 
     def create_database_in_page(
-        self, page_id: str, title_plain_text: str, properties: list[str],
-        questions_to_rename: Optional[dict] = None,
-        default_mapping: Optional[dict] = None,
+        self,
+        page_id: str,
+        title_plain_text: str,
+        properties: list[str],
     ) -> str:
         """在指定页面下创建数据库
 
@@ -99,12 +100,7 @@ class NotionClient:
 
             # 添加其他属性
             for prop in properties:
-                if questions_to_rename and prop in questions_to_rename:
-                    prop = questions_to_rename[prop]
                 properties_dict[prop] = {"rich_text": {}}  # 默认使用富文本类型
-            if default_mapping:
-                for key, _ in default_mapping.items():
-                    properties_dict[key] = {"rich_text": {}}
 
             # 构建请求体
             payload = {
